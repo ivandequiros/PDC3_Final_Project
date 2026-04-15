@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DiscountsPromos;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\View;
 
 class DiscountsPromosController extends Controller
 {
@@ -12,7 +13,9 @@ class DiscountsPromosController extends Controller
      */
     public function index()
     {
-        //
+        // Order by expiry date so upcoming expirations are at the top
+        $promos = DiscountsPromos::orderBy('expiry_date', 'asc')->get();
+        return View::make('promos.index', compact('promos'));
     }
 
     /**
@@ -20,7 +23,7 @@ class DiscountsPromosController extends Controller
      */
     public function create()
     {
-        //
+        return View::make('promos.create');
     }
 
     /**
@@ -28,7 +31,16 @@ class DiscountsPromosController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'promo_name'       => 'required|string|max:255|unique:discount_promos,promo_name',
+            'discount_percent' => 'required|numeric|min:0|max:100',
+            'expiry_date'      => 'required|date',
+        ]);
+
+        DiscountsPromos::create($validated);
+
+        return redirect()->route('promos.index')
+                         ->with('success', 'Discount promo created successfully.');
     }
 
     /**
@@ -36,7 +48,7 @@ class DiscountsPromosController extends Controller
      */
     public function show(DiscountsPromos $discountsPromos)
     {
-        //
+        return View::make('promos.show', compact('discountsPromos'));
     }
 
     /**
@@ -44,7 +56,7 @@ class DiscountsPromosController extends Controller
      */
     public function edit(DiscountsPromos $discountsPromos)
     {
-        //
+        return View::make('promos.edit', compact('discountsPromos'));
     }
 
     /**
@@ -52,7 +64,16 @@ class DiscountsPromosController extends Controller
      */
     public function update(Request $request, DiscountsPromos $discountsPromos)
     {
-        //
+        $validated = $request->validate([
+            'promo_name'       => 'required|string|max:255|unique:discount_promos,promo_name,' . $discountsPromos->id,
+            'discount_percent' => 'required|numeric|min:0|max:100',
+            'expiry_date'      => 'required|date',
+        ]);
+
+        $discountsPromos->update($validated);
+
+        return redirect()->route('promos.index')
+                         ->with('success', 'Discount promo updated successfully.');
     }
 
     /**
@@ -60,6 +81,9 @@ class DiscountsPromosController extends Controller
      */
     public function destroy(DiscountsPromos $discountsPromos)
     {
-        //
+        $discountsPromos->delete();
+
+        return redirect()->route('promos.index')
+                         ->with('success', 'Discount promo deleted successfully.');
     }
 }
