@@ -30,14 +30,14 @@ Route::middleware(['auth', 'role:Admin'])->group(function () {
 });
 
 // Manager & Admin Routes (Inventory & Supply Chain Modules)
-Route::middleware(['auth', 'role:Admin,Manager'])->group(function () {
+// Route::middleware(['auth', 'role:Admin,Manager'])->group(function () {
     Route::resource('products', ProductsController::class);
     Route::resource('categories', CategoriesController::class);
     Route::resource('suppliers', SuppliersController::class);
     Route::resource('purchase_orders', PurchaseOrdersController::class);
     Route::resource('inventory_logs', InventoryLogsController::class);
     Route::resource('low_stock_alerts', LowStockAlertsController::class);
-});
+//});
 
 // Cashier, Manager, & Admin Routes (Sales Module)
 Route::middleware(['auth', 'role:Admin,Manager,Cashier'])->group(function () {

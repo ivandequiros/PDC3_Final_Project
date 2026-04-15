@@ -15,8 +15,13 @@ class ProductsController extends Controller
      */
     public function index()
     {
-        // Eager load category and supplier to prevent N+1 query issues
         $products = Products::with(['category', 'supplier'])->orderBy('name', 'asc')->get();
+        
+        /*// For testing
+        if (request()->wantsJson()) {
+            return response()->json($products);
+        }*/
+
         return View::make('products.index', compact('products'));
     }
 
