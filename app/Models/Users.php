@@ -2,28 +2,23 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
+// IMPORTANT: Use the Authenticatable class
+use Illuminate\Foundation\Auth\User as Authenticatable; 
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class Users extends Authenticatable
+class Users extends Authenticatable // NOT extends Model
 {
     use HasFactory, Notifiable;
 
-    // Explicitly binding the table name
     protected $table = 'users';
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'username',
         'password',
         'role_id',
     ];
+
 
     /**
      * The attributes that should be hidden for serialization.
