@@ -3,10 +3,9 @@
 @section('content')
 
     <div class="flex justify-center mb-6">
-        <div
-            class="h-16 w-16 bg-[#1e3a8a] rounded-2xl flex items-center justify-center shadow-lg transform -rotate-6 text-3xl">
-            🎒
-        </div>
+        <div class="w-20 h-20 bg-blue-50 rounded-[2rem] flex items-center justify-center shadow-inner ">
+        <img src="{{ asset('images/logo.png') }}" alt="SupplyCore" class="w-12 h-12 object-contain">
+    </div>
     </div>
     <div class="text-center mb-8">
         <h2 class="text-3xl font-extrabold text-[#1e3a8a]">Registration</h2>

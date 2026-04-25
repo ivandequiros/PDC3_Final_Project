@@ -54,9 +54,9 @@ class Transactions extends Model
      * Get the line items (details) for this transaction.
      */
     public function details()
-    {
-        return $this->hasMany(TransactionDetails::class, 'transaction_id');
-    }
+{
+    return $this->hasMany(TransactionDetails::class, 'transaction_id');
+}
 
     /**
      * Get the return message associated with this transaction, if any.

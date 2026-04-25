@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Users;
-use App\Models\UserRoles; // Required to fetch roles for the create/edit forms
+use App\Models\UserRoles;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\View;
-use Illuminate\Support\Facades\Hash; // Required for securely hashing passwords
 
 class UsersController extends Controller
 {
@@ -15,8 +15,9 @@ class UsersController extends Controller
      */
     public function index()
     {
-        $users = Users::with('role')->get();
-        return View::make('users.index', compact('users'));
+        // Eager load the role relationship
+        $users = Users::with('role')->orderBy('username', 'asc')->get();
+        return view('users.index', compact('users'));
     }
 
     /**
@@ -25,7 +26,7 @@ class UsersController extends Controller
     public function create()
     {
         $roles = UserRoles::all();
-        return View::make('users.create', compact('roles'));
+        return view('users.create', compact('roles'));
     }
 
     /**
@@ -35,6 +36,7 @@ class UsersController extends Controller
     {
         $validated = $request->validate([
             'username' => 'required|string|max:255|unique:users,username',
+            'email'    => 'required|email|unique:users,email', // Added email back
             'password' => 'required|string|min:8',
             'role_id'  => 'required|exists:user_roles,id',
         ]);
@@ -44,7 +46,7 @@ class UsersController extends Controller
         Users::create($validated);
 
         return redirect()->route('users.index')
-                         ->with('success', 'User created successfully.');
+                         ->with('success', 'Staff account created successfully.');
     }
 
     /**
@@ -60,10 +62,10 @@ class UsersController extends Controller
      * Show the form for editing the specified resource.
      */
     public function edit(Users $user)
-    {
-        $roles = UserRoles::all();
-        return View::make('users.edit', compact('user', 'roles'));
-    }
+{
+    $roles = \App\Models\UserRoles::all();
+    return view('users.edit', compact('user', 'roles'));
+}
 
     /**
      * Update the specified resource in storage.
@@ -72,10 +74,12 @@ class UsersController extends Controller
     {
         $validated = $request->validate([
             'username' => 'required|string|max:255|unique:users,username,' . $user->id,
+            'email'    => 'required|email|unique:users,email,' . $user->id,
             'password' => 'nullable|string|min:8',
             'role_id'  => 'required|exists:user_roles,id',
         ]);
 
+        // Only update password if a new one was provided
         if (!empty($validated['password'])) {
             $validated['password'] = Hash::make($validated['password']);
         } else {
@@ -93,14 +97,14 @@ class UsersController extends Controller
      */
     public function destroy(Users $user)
     {
-        // Optional: Prevent deleting your own admin account
-        // if (auth()->id() === $user->id) {
-        //     return back()->withErrors('You cannot delete your own account.');
-        // }
+        // Security check: Prevent deleting your own logged-in account
+        if (auth()->id() === $user->id) {
+            return back()->with('error', 'Critical Error: You cannot delete your own administrative account.');
+        }
 
         $user->delete();
 
         return redirect()->route('users.index')
-                         ->with('success', 'User deleted successfully.');
+                         ->with('success', 'Staff account has been deactivated.');
     }
 }

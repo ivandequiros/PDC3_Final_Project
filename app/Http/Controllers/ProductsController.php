@@ -15,14 +15,9 @@ class ProductsController extends Controller
      */
     public function index()
     {
+        // Eager load category and supplier to avoid slow page loads
         $products = Products::with(['category', 'supplier'])->orderBy('name', 'asc')->get();
-        
-        /*// For testing
-        if (request()->wantsJson()) {
-            return response()->json($products);
-        }*/
-
-        return View::make('products.index', compact('products'));
+        return view('products.index', compact('products'));
     }
 
     /**
@@ -32,28 +27,21 @@ class ProductsController extends Controller
     {
         $categories = Categories::orderBy('category_name', 'asc')->get();
         $suppliers = Suppliers::orderBy('company_name', 'asc')->get();
-        
-        return View::make('products.create', compact('categories', 'suppliers'));
+        return view('products.create', compact('categories', 'suppliers'));
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'name'          => 'required|string|max:255|unique:products,name',
-            'category_id'   => 'required|exists:categories,id',
-            'supplier_id'   => 'required|exists:suppliers,id',
-            'stock_level'   => 'required|integer|min:0',
-            'current_price' => 'required|numeric|min:0',
-        ]);
-
-        Products::create($validated);
-
-        return redirect()->route('products.index')
-                         ->with('success', 'Product created successfully.');
-    }
+    public function store(Request $request) {
+    // ... your current save logic ...
+    
+    // Add this line to record the action
+    \App\Models\Logs::create([
+        'user_id' => auth()->id(),
+        'action'  => 'Added new product: ' . $request->name,
+    ]);
+}
 
     /**
      * Display the specified resource.
@@ -68,32 +56,39 @@ class ProductsController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Products $products)
-    {
-        $categories = Categories::orderBy('category_name', 'asc')->get();
-        $suppliers = Suppliers::orderBy('company_name', 'asc')->get();
-        
-        return View::make('products.edit', compact('products', 'categories', 'suppliers'));
-    }
+    public function edit(Products $product) 
+{
+    $categories = Categories::orderBy('category_name', 'asc')->get();
+    $suppliers = Suppliers::orderBy('company_name', 'asc')->get();
+    
+    // Change variable name here too
+    return view('products.edit', compact('product', 'categories', 'suppliers'));
+}
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Products $products)
-    {
-        $validated = $request->validate([
-            'name'          => 'required|string|max:255|unique:products,name,' . $products->id,
-            'category_id'   => 'required|exists:categories,id',
-            'supplier_id'   => 'required|exists:suppliers,id',
-            'stock_level'   => 'required|integer|min:0',
-            'current_price' => 'required|numeric|min:0',
-        ]);
+    public function update(Request $request, Products $product) // Must be singular $product
+{
+    $validated = $request->validate([
+        'name'          => 'required|string|max:255|unique:products,name,' . $product->id,
+        'category_id'   => 'required|exists:categories,id',
+        'supplier_id'   => 'required|exists:suppliers,id',
+        'stock_level'   => 'required|integer|min:0',
+        'current_price' => 'required|numeric|min:0',
+    ]);
 
-        $products->update($validated);
+    $product->update($validated);
 
-        return redirect()->route('products.index')
-                         ->with('success', 'Product updated successfully.');
-    }
+    // Logging the action for your System Logs
+    \App\Models\Logs::create([
+        'user_id' => auth()->id(),
+        'action'  => 'Updated product details for: ' . $product->name,
+    ]);
+
+    return redirect()->route('products.index')
+                     ->with('success', 'Product information updated successfully.');
+}
 
     /**
      * Remove the specified resource from storage.

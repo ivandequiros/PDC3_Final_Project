@@ -2,93 +2,56 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ReturnsRefunds;
 use App\Models\Transactions;
+use App\Models\TransactionDetails;
+use App\Models\ReturnsRefunds;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\View;
 
 class ReturnsRefundsController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        // Eager load the transaction to prevent N+1 queries
-        $returns = ReturnsRefunds::with('transaction')->latest()->get();
-        return View::make('returns_refunds.index', compact('returns'));
+        $returns = ReturnsRefunds::with(['transaction', 'product'])->latest()->get();
+        return view('returns.index', compact('returns'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function create(Request $request)
     {
-        // Fetching transactions so the user can select which one is being refunded
-        $transactions = Transactions::orderBy('date', 'desc')->get();
-        return View::make('returns_refunds.create', compact('transactions'));
+        $transaction = null;
+        if ($request->has('transaction_id')) {
+            $transaction = Transactions::with('details.product')->find($request->transaction_id);
+        }
+        return view('returns.create', compact('transaction'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $request->validate([
             'transaction_id' => 'required|exists:transactions,id',
+            'product_id'     => 'required|exists:products,id',
+            'quantity'       => 'required|integer|min:1',
             'reason'         => 'required|string|max:255',
-            'refund_amount'  => 'required|numeric|min:0',
         ]);
 
-        ReturnsRefunds::create($validated);
-
-        return redirect()->route('returns_refunds.index')
-                         ->with('success', 'Return/Refund recorded successfully.');
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(ReturnsRefunds $returnsRefunds)
-    {
-        $returnsRefunds->load('transaction');
-        return View::make('returns_refunds.show', compact('returnsRefunds'));
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(ReturnsRefunds $returnsRefunds)
-    {
-        $transactions = Transactions::orderBy('date', 'desc')->get();
-        return View::make('returns_refunds.edit', compact('returnsRefunds', 'transactions'));
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, ReturnsRefunds $returnsRefunds)
-    {
-        $validated = $request->validate([
-            'transaction_id' => 'required|exists:transactions,id',
-            'reason'         => 'required|string|max:255',
-            'refund_amount'  => 'required|numeric|min:0',
+        // 1. Record the Return
+        ReturnsRefunds::create([
+            'transaction_id' => $request->transaction_id,
+            'product_id'     => $request->product_id,
+            'quantity'       => $request->quantity,
+            'reason'         => $request->reason,
+            'processed_by'   => auth()->id(),
         ]);
 
-        $returnsRefunds->update($validated);
+        // 2. Restock the Product
+        $product = \App\Models\Products::find($request->product_id);
+        $product->increment('stock_level', $request->quantity);
 
-        return redirect()->route('returns_refunds.index')
-                         ->with('success', 'Return/Refund updated successfully.');
-    }
+        // 3. Log the action
+        \App\Models\Logs::create([
+            'user_id' => auth()->id(),
+            'action'  => "Processed Return for TRX-{$request->transaction_id} (Item: {$product->name})",
+        ]);
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(ReturnsRefunds $returnsRefunds)
-    {
-        $returnsRefunds->delete();
-
-        return redirect()->route('returns_refunds.index')
-                         ->with('success', 'Return/Refund deleted successfully.');
+        return redirect()->route('returns.index')->with('success', 'Refund processed and stock updated.');
     }
 }

@@ -4,87 +4,47 @@ namespace App\Http\Controllers;
 
 use App\Models\Categories;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\View;
 
 class CategoriesController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        $categories = Categories::orderBy('category_name', 'asc')->get();
-        return View::make('categories.index', compact('categories'));
+        // Eager load products to show a count of items in each category
+        $categories = Categories::withCount('products')->orderBy('category_name', 'asc')->get();
+        return view('categories.index', compact('categories'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        return View::make('categories.create');
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'category_name' => 'required|string|max:255|unique:categories,category_name',
+            'category_name' => 'required|string|max:100|unique:categories,category_name',
         ]);
 
         Categories::create($validated);
 
         return redirect()->route('categories.index')
-                         ->with('success', 'Category created successfully.');
+                         ->with('success', 'New category successfully added.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Categories $categories)
-    {
-        // Load the products that belong to this category
-        $categories->load('products');
-        return View::make('categories.show', compact('categories'));
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Categories $categories)
-    {
-        return View::make('categories.edit', compact('categories'));
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Categories $categories)
+    public function update(Request $request, Categories $category)
     {
         $validated = $request->validate([
-            'category_name' => 'required|string|max:255|unique:categories,category_name,' . $categories->id,
+            'category_name' => 'required|string|max:100|unique:categories,category_name,' . $category->id,
         ]);
 
-        $categories->update($validated);
+        $category->update($validated);
 
         return redirect()->route('categories.index')
-                         ->with('success', 'Category updated successfully.');
+                         ->with('success', 'Category name updated.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Categories $categories)
+    public function destroy(Categories $category)
     {
-        if ($categories->products()->count() > 0) {
-            return back()->withErrors('Cannot delete a category that contains products.');
+        if ($category->products()->count() > 0) {
+            return back()->with('error', 'Cannot delete: This category still contains active products.');
         }
 
-        $categories->delete();
-
-        return redirect()->route('categories.index')
-                         ->with('success', 'Category deleted successfully.');
+        $category->delete();
+        return redirect()->route('categories.index')->with('success', 'Category removed.');
     }
 }
