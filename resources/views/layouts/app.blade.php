@@ -92,13 +92,12 @@
         </div>
     </div>
 
-    <form action="{{ route('logout') }}" method="POST" id="logout-form">
-        @csrf {{-- CRITICAL: Without this, you get the 419 error --}}
-        <button type="submit" class="w-full text-left text-[10px] text-red-300 hover:text-red-100 font-black uppercase tracking-widest transition flex items-center group">
-            <span class="mr-2 group-hover:scale-125 transition">🚪</span> 
-            Logout Account
-        </button>
-    </form>
+    <form action="{{ route('logout') }}" method="POST" class="inline">
+    @csrf {{-- THIS IS THE MISSING KEY TO FIX 419 --}}
+    <button type="submit" class="text-red-500 font-black uppercase text-[10px] tracking-widest hover:text-red-700 transition">
+        Logout ➔
+    </a>
+</form>
 </div>
     </aside>
 

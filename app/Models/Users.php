@@ -51,9 +51,10 @@ class Users extends Authenticatable // NOT extends Model
      * Get the role associated with the user.
      */
     public function role()
-    {
-        return $this->belongsTo(UserRoles::class, 'role_id');
-    }
+{
+    // Ensure 'role_id' matches your foreign key in the users table
+    return $this->belongsTo(UserRoles::class, 'role_id');
+}
 
     /**
      * Get the transactions processed by this user.

@@ -2,15 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Categories;
+// We alias the model as CategoryModel to prevent PHP from getting confused
+use App\Models\Categories as CategoryModel; 
 use Illuminate\Http\Request;
 
 class CategoriesController extends Controller
 {
     public function index()
     {
-        // Eager load products to show a count of items in each category
-        $categories = Categories::withCount('products')->orderBy('category_name', 'asc')->get();
+        // Use the alias 'CategoryModel' here
+        $categories = CategoryModel::withCount('products')
+            ->orderBy('category_name', 'asc')
+            ->get();
+
         return view('categories.index', compact('categories'));
     }
 
@@ -20,31 +24,20 @@ class CategoriesController extends Controller
             'category_name' => 'required|string|max:100|unique:categories,category_name',
         ]);
 
-        Categories::create($validated);
+        CategoryModel::create($validated);
 
-        return redirect()->route('categories.index')
-                         ->with('success', 'New category successfully added.');
+        return redirect()->route('categories.index')->with('success', 'New category added!');
     }
 
-    public function update(Request $request, Categories $category)
+    public function destroy($id)
     {
-        $validated = $request->validate([
-            'category_name' => 'required|string|max:100|unique:categories,category_name,' . $category->id,
-        ]);
+        $category = CategoryModel::findOrFail($id);
 
-        $category->update($validated);
-
-        return redirect()->route('categories.index')
-                         ->with('success', 'Category name updated.');
-    }
-
-    public function destroy(Categories $category)
-    {
         if ($category->products()->count() > 0) {
-            return back()->with('error', 'Cannot delete: This category still contains active products.');
+            return back()->with('error', 'Integrity Error: This category still contains items.');
         }
 
         $category->delete();
-        return redirect()->route('categories.index')->with('success', 'Category removed.');
+        return redirect()->route('categories.index')->with('success', 'Category deleted.');
     }
 }

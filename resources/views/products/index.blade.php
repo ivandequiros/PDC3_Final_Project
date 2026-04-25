@@ -2,75 +2,47 @@
 
 @section('content')
 <div class="max-w-7xl mx-auto">
+    {{-- Success Message --}}
+    @if(session('success'))
+        <div class="bg-green-600 text-white p-4 rounded-2xl mb-6 font-black uppercase text-[10px] tracking-widest shadow-lg">
+            ✅ {{ session('success') }}
+        </div>
+    @endif
+
+    {{-- Error Alert --}}
+    @if ($errors->any())
+        <div class="bg-red-600 text-white p-5 rounded-2xl mb-8 font-black uppercase text-[10px] tracking-widest shadow-2xl">
+            <p class="mb-2 underline">🚨 Submission Rejected:</p>
+            <ul class="list-disc pl-5">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    {{-- Header --}}
     <div class="flex justify-between items-center mb-8">
-        <div>
-            <h1 class="text-3xl font-black text-[#1e3a8a]">Product Inventory</h1>
-            <p class="text-gray-500">Manage school supplies, pricing, and stock levels.</p>
-        </div>
-        <a href="{{ route('products.create') }}" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-2xl font-bold transition shadow-lg transform active:scale-95 flex items-center">
-            <span class="mr-2">➕</span> Add New Supply
-        </a>
+        <h1 class="text-3xl font-black text-[#1e3a8a] tracking-tight uppercase italic">Inventory</h1>
+        <button type="button" onclick="toggleModal('addModal', true)" class="bg-green-600 text-white px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl transform active:scale-95">
+            ➕ Add New Supply
+        </button>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Total SKU Count</p>
-            <p class="text-2xl font-black text-gray-800">{{ $products->count() }} Items</p>
-        </div>
-        <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Low Stock Alerts</p>
-            <p class="text-2xl font-black text-red-600">{{ $products->where('stock_level', '<', 10)->count() }} Items</p>
-        </div>
-        <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Inventory Value</p>
-            <p class="text-2xl font-black text-blue-600">₱{{ number_format($products->sum(fn($p) => $p->current_price * $p->stock_level), 2) }}</p>
-        </div>
-    </div>
-
-    <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
+    {{-- Table (Briefly) --}}
+    <div class="bg-white rounded-[3rem] shadow-sm border border-gray-100 overflow-hidden">
         <table class="w-full text-left">
-            <thead class="bg-gray-50 border-b border-gray-100">
-                <tr>
-                    <th class="px-8 py-5 text-[10px] uppercase font-black text-gray-400">Product Details</th>
-                    <th class="px-8 py-5 text-[10px] uppercase font-black text-gray-400">Category</th>
-                    <th class="px-8 py-5 text-[10px] uppercase font-black text-gray-400">Price</th>
-                    <th class="px-8 py-5 text-[10px] uppercase font-black text-gray-400">Stock</th>
-                    <th class="px-8 py-5 text-center text-[10px] uppercase font-black text-gray-400">Actions</th>
-                </tr>
-            </thead>
             <tbody class="divide-y divide-gray-50">
                 @foreach($products as $product)
-                <tr class="hover:bg-blue-50/30 transition">
+                <tr>
+                    <td class="px-8 py-5 font-black text-gray-800">{{ $product->name }}</td>
+                    <td class="px-8 py-5">₱{{ number_format($product->current_price, 2) }}</td>
+                    <td class="px-8 py-5 font-bold">{{ $product->stock_level }}</td>
                     <td class="px-8 py-5">
-                        <div class="font-bold text-gray-800">{{ $product->name }}</div>
-                        <div class="text-[10px] text-gray-400 font-medium uppercase tracking-tighter">Supplier: {{ $product->supplier->company_name ?? 'N/A' }}</div>
-                    </td>
-                    <td class="px-8 py-5">
-                        <span class="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-xs font-bold">
-                            {{ $product->category->category_name ?? 'Uncategorized' }}
-                        </span>
-                    </td>
-                    <td class="px-8 py-5 font-black text-blue-700">
-                        ₱{{ number_format($product->current_price, 2) }}
-                    </td>
-                    <td class="px-8 py-5">
-                        <div class="flex items-center">
-                            <span class="font-bold {{ $product->stock_level < 10 ? 'text-red-600' : 'text-gray-700' }}">
-                                {{ $product->stock_level }}
-                            </span>
-                            @if($product->stock_level < 10)
-                                <span class="ml-2 text-[9px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-black uppercase italic animate-pulse">Critical</span>
-                            @endif
-                        </div>
-                    </td>
-                    <td class="px-8 py-5">
-                        <div class="flex justify-center space-x-2">
-                            <a href="{{ route('products.edit', $product) }}" class="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition">✏️</a>
-                            <form action="{{ route('products.destroy', $product) }}" method="POST" class="inline">
-                                @csrf @method('DELETE')
-                                <button class="p-2 text-red-500 hover:bg-red-50 rounded-xl transition" onclick="return confirm('Delete item?')">🗑️</button>
-                            </form>
-                        </div>
+                        <form action="{{ route('products.destroy', $product) }}" method="POST">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="text-red-500">🗑️</button>
+                        </form>
                     </td>
                 </tr>
                 @endforeach
@@ -79,11 +51,58 @@
     </div>
 </div>
 
-<div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Inventory Value</p>
-    <p class="text-2xl font-black text-blue-600">
-        {{-- This multiplies price by stock for every item and sums them up --}}
-        ₱{{ number_format($products->sum(fn($p) => $p->current_price * $p->stock_level), 2) }}
-    </p>
+{{-- Add Modal --}}
+<div id="addModal" class="fixed inset-0 bg-[#1e3a8a]/40 backdrop-blur-sm items-center justify-center z-50 hidden flex px-4">
+    <div class="bg-white rounded-[3rem] p-10 w-full max-w-md shadow-2xl relative">
+        <button onclick="toggleModal('addModal', false)" class="absolute top-8 right-8 text-gray-400 font-black">✕</button>
+        <h2 class="text-2xl font-black text-[#1e3a8a] mb-8 uppercase italic">New <span class="text-blue-500">Supply</span></h2>
+
+        <form action="{{ route('products.store') }}" method="POST">
+            @csrf 
+            <div class="space-y-4">
+                <div>
+                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Product Name</label>
+                    <input type="text" name="product_name" required class="w-full px-5 py-4 bg-gray-50 rounded-2xl border-none font-bold">
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Category</label>
+                    <select name="category_id" required class="w-full px-5 py-4 bg-gray-50 rounded-2xl border-none font-bold">
+                        <option value="">Select Category</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->id }}">{{ $category->category_name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Supplier</label>
+                    <select name="supplier_id" required class="w-full px-5 py-4 bg-gray-50 rounded-2xl border-none font-bold">
+                        <option value="">Select Supplier</option>
+                        @foreach($suppliers as $supplier)
+                            <option value="{{ $supplier->id }}">{{ $supplier->company_name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Price</label>
+                        <input type="number" step="0.01" name="current_price" required class="w-full px-5 py-4 bg-gray-50 rounded-2xl border-none font-bold">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Qty</label>
+                        <input type="number" name="stock_level" required class="w-full px-5 py-4 bg-gray-50 rounded-2xl border-none font-bold">
+                    </div>
+                </div>
+            </div>
+            <button type="submit" class="w-full mt-8 bg-[#1e3a8a] text-white font-black py-5 rounded-2xl shadow-xl hover:bg-blue-800 uppercase text-[10px] tracking-widest">
+                🚀 Save to Inventory
+            </button>
+        </form>
+    </div>
 </div>
+
+<script>
+    function toggleModal(modalId, show) {
+        document.getElementById(modalId).classList.toggle('hidden', !show);
+    }
+</script>
 @endsection

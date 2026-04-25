@@ -2,56 +2,41 @@
 
 @section('content')
 <div class="max-w-7xl mx-auto">
-    <div class="flex justify-between items-center mb-8">
+    <div class="flex justify-between items-center mb-10">
         <div>
-            <h1 class="text-3xl font-black text-[#1e3a8a]">Staff Accounts</h1>
-            <p class="text-gray-500">Manage internal personnel and their system access.</p>
+            <h1 class="text-3xl font-black text-[#1e3a8a] tracking-tight uppercase italic">Staff <span class="text-blue-500">Registry</span></h1>
+            <p class="text-gray-400 font-black uppercase text-[10px] tracking-[0.2em] mt-1">Authorized System Personnel</p>
         </div>
-        <a href="{{ route('users.create') }}" class="bg-[#1e3a8a] text-white px-6 py-3 rounded-2xl font-bold transition shadow-lg hover:bg-blue-800">
-            + Add Staff Member
+        {{-- CRITICAL: This link must match your route name --}}
+        <a href="{{ route('users.create') }}" class="bg-[#1e3a8a] text-white px-8 py-4 rounded-2xl font-black shadow-xl hover:bg-blue-800 transition text-[10px] uppercase tracking-widest">
+            ➕ Add New Staff
         </a>
     </div>
 
-    @if(session('success'))
-        <div class="mb-6 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 font-bold rounded-r-xl shadow-sm">
-            ✅ {{ session('success') }}
-        </div>
-    @endif
-
-    <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
+    <div class="bg-white rounded-[3rem] shadow-sm border border-gray-100 overflow-hidden">
         <table class="w-full text-left">
             <thead class="bg-gray-50 border-b border-gray-100">
                 <tr>
-                    <th class="px-8 py-5 text-[10px] uppercase font-black text-gray-400 tracking-widest">User Details</th>
-                    <th class="px-8 py-5 text-[10px] uppercase font-black text-gray-400 tracking-widest">Email</th>
+                    <th class="px-8 py-5 text-[10px] uppercase font-black text-gray-400 tracking-widest">Username</th>
                     <th class="px-8 py-5 text-[10px] uppercase font-black text-gray-400 tracking-widest">Role</th>
-                    <th class="px-8 py-5 text-[10px] uppercase font-black text-gray-400 tracking-widest text-right">Actions</th>
+                    <th class="px-8 py-5 text-center text-[10px] uppercase font-black text-gray-400 tracking-widest">Actions</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-50">
                 @foreach($users as $user)
-                <tr class="hover:bg-gray-50/50 transition">
+                <tr class="hover:bg-blue-50/30 transition">
+                    <td class="px-8 py-5 font-bold text-gray-800">{{ $user->username }}</td>
                     <td class="px-8 py-5">
-                        <div class="flex items-center">
-                            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-blue-400 text-white flex items-center justify-center font-bold mr-4">
-                                {{ strtoupper(substr($user->username, 0, 1)) }}
-                            </div>
-                            <span class="font-black text-gray-800">{{ $user->username }}</span>
-                        </div>
-                    </td>
-                    <td class="px-8 py-5 text-gray-500 text-sm">{{ $user->email }}</td>
-                    <td class="px-8 py-5">
-                        <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest 
-                            {{ $user->role->role_name == 'Admin' ? 'bg-purple-100 text-purple-700' : 
-                               ($user->role->role_name == 'Manager' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600') }}">
+                        <span class="px-3 py-1 rounded-lg text-[10px] font-black uppercase bg-blue-50 text-blue-600">
                             {{ $user->role->role_name }}
                         </span>
                     </td>
-                    <td class="px-8 py-5 text-right">
-    <a href="{{ route('users.edit', $user->id) }}" class="bg-gray-50 text-gray-600 hover:bg-blue-50 hover:text-blue-600 px-4 py-2 rounded-xl transition font-bold text-sm shadow-sm border border-gray-100">
-        Manage
-    </a>
-</td>
+                    <td class="px-8 py-5 text-center">
+                        <form action="{{ route('users.destroy', $user) }}" method="POST" onsubmit="return confirm('Delete user?')">
+                            @csrf @method('DELETE')
+                            <button class="text-red-500 hover:scale-110 transition">🗑️</button>
+                        </form>
+                    </td>
                 </tr>
                 @endforeach
             </tbody>

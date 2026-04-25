@@ -23,8 +23,7 @@ class Categories extends Model
     /**
      * Get the products associated with this category.
      */
-    public function products()
-    {
-        return $this->hasMany(Products::class, 'category_id');
-    }
+    public function products() {
+    return $this->hasMany(Products::class, 'category_id');
+}
 }

@@ -6,65 +6,41 @@ use App\Models\Users;
 use App\Models\UserRoles;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\View;
 
 class UsersController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    // 1. Show the list of users
     public function index()
     {
-        // Eager load the role relationship
-        $users = Users::with('role')->orderBy('username', 'asc')->get();
+        $users = Users::with('role')->get();
         return view('users.index', compact('users'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
+    // 2. Show the "Create Account" Form
     public function create()
     {
         $roles = UserRoles::all();
         return view('users.create', compact('roles'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+    // 3. Save the Account
     public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'username' => 'required|string|max:255|unique:users,username',
-            'email'    => 'required|email|unique:users,email', // Added email back
-            'password' => 'required|string|min:8',
-            'role_id'  => 'required|exists:user_roles,id',
-        ]);
-
-        $validated['password'] = Hash::make($validated['password']);
-
-        Users::create($validated);
-
-        return redirect()->route('users.index')
-                         ->with('success', 'Staff account created successfully.');
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Users $user)
-    {
-        $user->load('role');
-        return View::make('users.show', compact('user'));
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Users $user)
 {
-    $roles = \App\Models\UserRoles::all();
-    return view('users.edit', compact('user', 'roles'));
+    $validated = $request->validate([
+        'username' => 'required|string|max:255|unique:users,username',
+        'email'    => 'required|email|unique:users,email',
+        'password' => 'required|string|min:8',
+        'role_id'  => 'required|exists:user_roles,id',
+    ]);
+
+    \App\Models\Users::create([
+        'username' => $validated['username'],
+        'email'    => $validated['email'],
+        'password' => \Illuminate\Support\Facades\Hash::make($validated['password']),
+        'role_id'  => $validated['role_id'],
+    ]);
+
+    return redirect()->route('users.index')->with('success', 'Staff account deployed successfully!');
 }
 
     /**
