@@ -57,7 +57,7 @@
                     <p class="text-[10px] font-black text-blue-300 uppercase tracking-widest opacity-50">Supply Chain</p>
                 </div>
                 <a href="{{ route('products.index') }}" class="flex items-center p-4 rounded-2xl hover:bg-white/10 transition {{ request()->is('products*') ? 'bg-white/10 font-bold' : '' }}">
-                    <span class="mr-3 text-lg">📦</span> All Products
+                    <span class="mr-3 text-lg">📦</span> Inventory
                 </a>
                 <a href="{{ route('categories.index') }}" class="flex items-center p-4 rounded-2xl hover:bg-white/10 transition {{ request()->is('categories*') ? 'bg-white/10 font-bold' : '' }}">
                     <span class="mr-3 text-lg">🏷️</span> Categories

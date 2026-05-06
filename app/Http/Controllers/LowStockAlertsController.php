@@ -13,11 +13,16 @@ class LowStockAlertsController extends Controller
      * Display a listing of the resource.
      */
     public function index()
-    {
-        // Eager load the product and sort so active alerts are at the top
-        $alerts = LowStockAlerts::with('product')->orderBy('is_active', 'desc')->get();
-        return View::make('low_stock_alerts.index', compact('alerts'));
-    }
+{
+
+    $threshold = 10;
+
+    $lowStockProducts = \App\Models\Products::where('stock_level', '<', $threshold)
+                        ->with(['category'])
+                        ->get();
+
+    return view('stock_alerts.index', compact('lowStockProducts', 'threshold'));
+}
 
     /**
      * Show the form for creating a new resource.

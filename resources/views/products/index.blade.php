@@ -22,33 +22,52 @@
     @endif
 
     {{-- Header --}}
-    <div class="flex justify-between items-center mb-8">
-        <h1 class="text-3xl font-black text-[#1e3a8a] tracking-tight uppercase italic">Inventory</h1>
-        <button type="button" onclick="toggleModal('addModal', true)" class="bg-green-600 text-white px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl transform active:scale-95">
-            ➕ Add New Supply
-        </button>
-    </div>
-
-    {{-- Table (Briefly) --}}
     <div class="bg-white rounded-[3rem] shadow-sm border border-gray-100 overflow-hidden">
-        <table class="w-full text-left">
-            <tbody class="divide-y divide-gray-50">
-                @foreach($products as $product)
-                <tr>
-                    <td class="px-8 py-5 font-black text-gray-800">{{ $product->name }}</td>
-                    <td class="px-8 py-5">₱{{ number_format($product->current_price, 2) }}</td>
-                    <td class="px-8 py-5 font-bold">{{ $product->stock_level }}</td>
-                    <td class="px-8 py-5">
-                        <form action="{{ route('products.destroy', $product) }}" method="POST">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="text-red-500">🗑️</button>
+    <table class="w-full text-left">
+        {{-- Table Labels (Headers) --}}
+        <thead class="bg-gray-50 border-b border-gray-100">
+            <tr>
+                <th class="px-8 py-5 text-[10px] uppercase font-black text-gray-400 tracking-widest">Product Details</th>
+                <th class="px-8 py-5 text-[10px] uppercase font-black text-gray-400 tracking-widest text-right">Price</th>
+                <th class="px-8 py-5 text-[10px] uppercase font-black text-gray-400 tracking-widest text-center">Stock</th>
+                <th class="px-8 py-5 text-center text-[10px] uppercase font-black text-gray-400 tracking-widest">Actions</th>
+            </tr>
+        </thead>
+
+        <tbody class="divide-y divide-gray-50 text-sm">
+            @foreach($products as $product)
+            <tr class="hover:bg-blue-50/30 transition">
+                <td class="px-8 py-5">
+                    <div class="font-black text-gray-800 tracking-tight">{{ $product->name }}</div>
+                    <div class="text-[9px] text-gray-400 font-black uppercase italic">ID: #{{ $product->id }}</div>
+                </td>
+                <td class="px-8 py-5 text-right font-black text-blue-700">
+                    ₱{{ number_format($product->current_price, 2) }}
+                </td>
+                <td class="px-8 py-5 text-center font-black text-gray-700">
+                    {{ $product->stock_level }}
+                </td>
+                <td class="px-8 py-5">
+                    <div class="flex justify-center items-center space-x-3">
+                        {{-- Edit Button --}}
+                        <a href="{{ route('products.edit', $product) }}" class="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition" title="Edit">
+                            ✏️
+                        </a>
+
+                        {{-- Delete Button --}}
+                        <form action="{{ route('products.destroy', $product) }}" method="POST" class="inline">
+                            @csrf 
+                            @method('DELETE')
+                            <button type="submit" class="p-2 text-red-500 hover:bg-red-50 rounded-xl transition" onclick="return confirm('Are you sure you want to delete this item?')" title="Delete">
+                                🗑️
+                            </button>
                         </form>
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
+                    </div>
+                </td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
 </div>
 
 {{-- Add Modal --}}
